@@ -1,8 +1,10 @@
 package re.play.tasks.controllers;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +15,10 @@ import re.play.tasks.data_access.TasksDAO;
 import re.play.tasks.model.Task;
 
 import javax.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -30,18 +36,23 @@ public class TaskController {
 
     @RequestMapping(method = POST, path = "/task")
     @ResponseBody
-    public void addTask(@RequestBody Task task) {
+    public ResponseEntity addTask(@RequestBody Task task) {
         tasksDAO.addTask(task);
+        MultiValueMap<String, String> headers = new HttpHeaders();
+        headers.put("Access-Control-Allow-Origin", Arrays.asList("*"));
+        return new ResponseEntity(headers, HttpStatus.OK);
     }
 
-    @RequestMapping(method = GET, path = "/task/{id}")
+    @RequestMapping(method = GET, value = { "task/{id}", "task/", "task" })
     @ResponseBody
-    public ResponseEntity getTasks(@PathVariable(name = "id") Integer id) {
-        if (id == null) {
-            return new ResponseEntity(tasksDAO.getAllTasks(), HttpStatus.OK);
+    public ResponseEntity getTasks(@PathVariable(name = "id") Optional<Integer> id) {
+        MultiValueMap<String, String> headers = new HttpHeaders();
+        headers.put("Access-Control-Allow-Origin", Arrays.asList("*"));
+        if (id.isPresent()) {
+            return new ResponseEntity(tasksDAO.getTask(id.get()), headers, HttpStatus.OK);
         }
         else {
-            return new ResponseEntity(tasksDAO.getTask(id), HttpStatus.OK);
+            return new ResponseEntity(tasksDAO.getAllTasks(), headers, HttpStatus.OK);
         }
     }
 
